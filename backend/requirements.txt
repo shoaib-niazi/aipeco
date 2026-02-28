@@ -1,0 +1,16 @@
+# =====================================================
+# AiPECO Backend - Python Requirements
+# Install with: pip install -r requirements.txt
+# =====================================================
+
+flask==3.0.0
+flask-cors==4.0.0
+pymongo==4.6.1
+numpy==1.26.2
+pandas==2.1.4
+scikit-learn==1.3.2
+tensorflow==2.15.0          # For LSTM + NILM deep learning models
+apscheduler==3.10.4         # For scheduled background jobs
+python-dotenv==1.0.0        # For environment variables
+matplotlib==3.8.2           # Optional: for debug plots
+requests==2.31.0

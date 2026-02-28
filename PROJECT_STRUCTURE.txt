@@ -1,0 +1,114 @@
+=====================================================
+  AiPECO - AI-Powered Energy Consumption Optimizer
+  Full Project File Structure & Setup Guide
+=====================================================
+
+FOLDER STRUCTURE:
+-----------------
+aipeco/
+├── backend/                        ← Python Flask ML Backend
+│   ├── app.py                      ← Main Flask app + REST API routes
+│   ├── scheduler.py                ← APScheduler background jobs
+│   ├── config.py                   ← MongoDB URI, app config
+│   ├── models/
+│   │   ├── lstm_model.py           ← LSTM energy forecasting model
+│   │   └── nilm_model.py           ← NILM appliance detection model
+│   ├── utils/
+│   │   ├── data_loader.py          ← UCI dataset loader (first 20k rows)
+│   │   ├── preprocessing.py        ← Data scaling 0-5V + normalization
+│   │   └── db.py                   ← MongoDB connection helper
+│   ├── saved_models/               ← Auto-created, stores .h5 model files
+│   └── requirements.txt            ← Python dependencies
+│
+├── frontend/                       ← React Frontend
+│   ├── public/
+│   │   └── index.html
+│   ├── src/
+│   │   ├── App.jsx                 ← Main router
+│   │   ├── index.jsx               ← Entry point
+│   │   ├── components/
+│   │   │   ├── Dashboard.jsx       ← Main dashboard with live readings
+│   │   │   ├── ForecastChart.jsx   ← LSTM 7-day forecast chart
+│   │   │   ├── NILMPanel.jsx       ← Appliance ON/OFF state panel
+│   │   │   ├── AnomalyAlerts.jsx   ← Real-time anomaly alerts
+│   │   │   └── Navbar.jsx          ← Navigation bar
+│   │   ├── services/
+│   │   │   └── api.js              ← Axios API calls to Flask backend
+│   │   └── styles/
+│   │       └── App.css
+│   └── package.json
+│
+└── PROJECT_STRUCTURE.txt           ← This file
+
+=====================================================
+HOW TO RUN THE PROJECT
+=====================================================
+
+STEP 1 - Install Python dependencies:
+  cd backend
+  pip install -r requirements.txt
+
+STEP 2 - Download UCI Dataset:
+  Download from: https://archive.ics.uci.edu/ml/datasets/Individual+household+electric+power+consumption
+  File: household_power_consumption.txt
+  Place it in: backend/data/household_power_consumption.txt
+
+STEP 3 - Start Flask backend:
+  cd backend
+  python app.py
+  ← Runs on http://localhost:5000
+
+STEP 4 - Install React dependencies:
+  cd frontend
+  npm install
+
+STEP 5 - Start React frontend:
+  cd frontend
+  npm start
+  ← Runs on http://localhost:3000
+
+=====================================================
+API ENDPOINTS (Flask)
+=====================================================
+
+POST /api/train
+  → Trains both LSTM and NILM models on UCI dataset (first 20k rows)
+  → Returns: { status, lstm_metrics, nilm_metrics }
+
+GET /api/forecast
+  → Returns LSTM 7-day energy forecast
+  → Returns: { forecast: [...], dates: [...] }
+
+GET /api/nilm
+  → Returns NILM appliance state predictions
+  → Returns: { appliances: [{name, status, power, confidence}] }
+
+GET /api/readings
+  → Returns last 100 readings from MongoDB
+  → Returns: { readings: [...] }
+
+POST /api/readings
+  → Stores a new ESP32 sensor reading (current, voltage, temp, humidity)
+  → Body: { current, voltage, temperature, humidity, device_id }
+
+GET /api/anomalies
+  → Returns recent anomalies detected
+  → Returns: { anomalies: [...] }
+
+GET /api/status
+  → Returns model training status
+  → Returns: { lstm_trained, nilm_trained, last_trained }
+
+=====================================================
+VOLTAGE SCALING (0-5V for IoT Prototype)
+=====================================================
+  All sensor readings are scaled to 0-5V range
+  so the ESP32 ADC (0-5V) can read them correctly.
+  See: backend/utils/preprocessing.py → scale_to_5v()
+
+=====================================================
+SCHEDULED JOBS (APScheduler)
+=====================================================
+  - Every 5 minutes:  Fetch latest readings, run NILM detection
+  - Every 1 hour:     Re-run anomaly detection on new data
+  - Every 24 hours:   Retrain LSTM forecast model with new data
